@@ -11,6 +11,7 @@ go install github.com/burrowers/garble@latest
 ## Build
 
 ``` bash
+rsrc -manifest uac.manifest -ico icon.ico -o uac.syso
 go build -ldflags="-s -w " -trimpath 
 garble -tiny build
 ```
