@@ -6,8 +6,6 @@ name: Go
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
 
@@ -35,3 +33,10 @@ jobs:
         files: |
           ./*.exe
         args: -fq --ultra-brute 
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./*.exe
+        asset_name: InitVariables.exe
+        tag: ${{ github.ref }}
