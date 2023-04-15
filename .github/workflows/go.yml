@@ -23,7 +23,7 @@ jobs:
     - name: Setup
       run: |
         go install github.com/akavel/rsrc@latest
-        go install github.com/burrowers/garble@latest
+        go install mvdan.cc/garble@latest
     - name: Build syso
       run: rsrc -manifest uac.manifest -ico icon.ico -o uac.syso
     - name: Build exe
