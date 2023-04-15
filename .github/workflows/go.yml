@@ -1,0 +1,37 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+    - name: Setup
+      run: |
+        go install github.com/akavel/rsrc@latest
+        go install github.com/burrowers/garble@latest
+    - name: Build syso
+      run: rsrc -manifest uac.manifest -ico icon.ico -o uac.syso
+    - name: Build exe
+      run: CGO_ENABLED=0 GOOS=windows GOARCH=amd64 garble -tiny build
+    - name: Run UPX
+      uses: crazy-max/ghaction-upx@v2
+      with:
+        version: latest
+        files: |
+          ./*.exe
+        args: -fq --ultra-brute 
