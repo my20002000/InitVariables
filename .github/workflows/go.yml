@@ -5,16 +5,41 @@
 name: Go
 
 on:
-  push:
-    branches: [ "main" ]
+  repository_dispatch:
+  workflow_dispatch:
 
 permissions: write-all
+
+env:
+  DELETE_OLD_WORKFLOW: true
+  DELETE_USELESS_FILES: true
 
 jobs:
 
   build:
     runs-on: ubuntu-latest
     steps:
+    - name: Maximize Build Space
+      if: env.DELETE_USELESS_FILES == 'true' && !cancelled()
+      uses: easimon/maximize-build-space@master
+      with:
+        root-reserve-mb: 5120
+        remove-dotnet: 'true'
+        remove-android: 'true'
+        remove-haskell: 'true'
+    - name: Initialize Environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo -E apt-get update
+        sudo timedatectl set-timezone "Asia/Shanghai"
+        if [ "${{ env.DELETE_USELESS_FILES }}" == true ]
+        then
+            docker rmi $(docker images -q)
+            sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php
+            sudo -E apt-get -y autoremove --purge
+            sudo -E apt-get clean
+        fi
     - uses: actions/checkout@v3
       with: 
         clean: false
@@ -37,11 +62,7 @@ jobs:
         files: |
           ./*.exe
         args: -fq --ultra-brute 
-    - name: Clean old workflows
-      uses: igorjs/gh-actions-clean-workflow@v3
-      with:
-        token: ${{ github.token }} # optional
-        days_old: 1 # optional
+        
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
@@ -51,3 +72,10 @@ jobs:
         tag: ${{ github.ref }}
         file_glob: true
         overwrite: true
+        
+    - name: Delete old Workflow Runs
+      uses: GitRML/delete-workflow-runs@main
+      if: env.DELETE_OLD_WORKFLOW == 'true' && !cancelled()
+      with:
+        retain_days: 1
+        keep_minimum_runs: 3
